@@ -9,12 +9,11 @@
 
 @layer base {
   body {
-    @apply bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] bg-pink-100;
+    @apply bg-[url('https://www.transparenttextures.com/patterns/brick-wall.png')] bg-blue-100;
     margin: 0;
     overflow: hidden;
   }
 
-  /* Global Film Grain Overlay */
   .film-grain {
     position: fixed;
     top: 0;

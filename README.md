@@ -1,73 +1,55 @@
-# React + TypeScript + Vite
+<div align="center">
+  <img src="public/logo.png" alt="PocketPix Logo" width="350" />
+  
+  *A cozy, 2000s digicam for capturing memories*
+</div>
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+---
 
-Currently, two official plugins are available:
+## What is PocketPix?
+PocketPix turns your browser into a classic 2000s Sony Cyber-shot digital camera.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Features
+* **Shutter & Timer:** A hardwired 3-second self-timer with pulsing on-screen digits, culminating in a bright flash and a crunchy mechanical shutter sound.
+* **Exports:** Open the digital menu to format your drive, export a massive `.zip` file of all your memories, or print a classic 4-photo photobooth strip.
+* **Photobooth Strips:** Crops your webcam photos into nostalgic 4:3 polaroids, and adds timestamps to the corner of each frame.
+* **Vintage Filters:** Cycle through Y2K-inspired color filters (Sepia, Grayscale, High-Contrast Saturate, and Dreamy Blur) using the silver Mode Dial.
+* **2000s Soundscape:** Complete with tactile menu beeps, timer ticks, and a built-in music player to loop your favorite hip hop background tracks.
+* **Realistic Navigation:** Use the W/T rocker to zoom out to a multi-photo grid, and click through your gallery using the D-Pad, just like using a real Sony Cyber-shot digicam.
 
-## React Compiler
+## How to Use
+1. Click the **Play/Gallery** button to toggle between the Live View and the Gallery View, which contains your saved photos.
+2. Press the **Spacebar** to trigger the 3-second countdown and snap a pic.
+3. Use the **W Button** in the gallery to zoom out to the 3x3 photo grid.
+4. Press the **Menu** button to access the Memory Stick and export your photobooth strips!
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Tech Stack
+* **Framework:** React & TypeScript
+* **Styling:** Tailwind CSS v4
+* **Core Logic:** HTML5 `<canvas>` for image manipulation, cropping, and text-rendering.
+* **File Handling:** `jszip` for bulk photo exports.
 
-## Expanding the ESLint configuration
+## Running Locally
+Want to boot up the camera on your own machine?
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+```bash
+# Install the dependencies
+npm install
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+# Start the Vite development server
+npm run dev
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## Credits & Attributions
+A huge thank you to the talented creators on [Pixabay](https://pixabay.com/) for the audio that brings this digital camera to life!
+* **Sound Effects:** Menu UI beeps, timer ticks, and the mechanical camera shutter were all sourced from Pixabay's SFX library
+    * Button Press: [*Charming Twinkle Sound for Fantasy and Magic*](https://pixabay.com/sound-effects/film-special-effects-charming-twinkle-sound-for-fantasy-and-magic-250240/) by Universfield
+    * Timer Tick: [*Bubble Pop 02*](https://pixabay.com/sound-effects/film-special-effects-bubble-pop-02-293341/) by Universfield
+    * Camera Shutter: [*Camera Shutter*](https://pixabay.com/sound-effects/technology-camera-shutter-6305/) by freesound_community
+* **Background Music:** [*2000s HipHop Beat*](https://pixabay.com/music/beats-2000s-hiphop-beat-346201/) by RoChick
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+---
+<div align="center">
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+### This project was built for Hack Club's Sleepover event.
+</div>

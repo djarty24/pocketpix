@@ -16,6 +16,22 @@ interface CameraProps {
 
 const FILTERS = ['', 'sepia(0.8)', 'grayscale(1)', 'saturate(2) contrast(1.2)', 'blur(0.5px) contrast(1.1)'];
 
+// --- SOUND MANAGER ---
+const sounds = {
+    beep: typeof Audio !== "undefined" ? new Audio('/beep.mp3') : null,
+    tick: typeof Audio !== "undefined" ? new Audio('/tick.mp3') : null,
+    shutter: typeof Audio !== "undefined" ? new Audio('/shutter.mp3') : null,
+};
+
+const playSound = (type: keyof typeof sounds) => {
+    const audio = sounds[type];
+    if (audio) {
+        audio.currentTime = 0;
+        audio.play().catch(() => { });
+    }
+};
+// ---------------------
+
 const Camera: React.FC<CameraProps> = ({ photos, setPhotos }) => {
     const screenRef = useRef<ScreenHandle>(null);
 
@@ -30,15 +46,35 @@ const Camera: React.FC<CameraProps> = ({ photos, setPhotos }) => {
     const [menuIndex, setMenuIndex] = useState(0);
     const [selectedPhotos, setSelectedPhotos] = useState<number[]>([]);
 
-    const cycleFilter = () => setFilterIdx((prev) => (prev + 1) % FILTERS.length);
-    const toggleGallery = () => setMode(prev => prev === 'camera' ? 'gallery_single' : 'camera');
+    const [countdown, setCountdown] = useState<number | null>(null);
+
+    const cycleFilter = () => { playSound('beep'); setFilterIdx((prev) => (prev + 1) % FILTERS.length); };
+    const toggleGallery = () => { playSound('beep'); setMode(prev => prev === 'camera' ? 'gallery_single' : 'camera'); };
 
     const triggerCapture = useCallback(() => {
-        if (mode !== 'camera') return;
-        setFlash(true);
-        screenRef.current?.capture();
-        setTimeout(() => setFlash(false), 150);
-    }, [mode]);
+        if (mode !== 'camera' || countdown !== null) return;
+
+        setCountdown(3);
+        let ticksLeft = 3;
+
+        playSound('tick');
+
+        const interval = setInterval(() => {
+            ticksLeft -= 1;
+            if (ticksLeft > 0) {
+                playSound('tick');
+                setCountdown(ticksLeft);
+            } else {
+                clearInterval(interval);
+                setCountdown(null);
+
+                playSound('shutter');
+                setFlash(true);
+                screenRef.current?.capture();
+                setTimeout(() => setFlash(false), 150);
+            }
+        }, 1000);
+    }, [mode, countdown]);
 
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
@@ -51,24 +87,29 @@ const Camera: React.FC<CameraProps> = ({ photos, setPhotos }) => {
         return () => window.removeEventListener('keydown', handleKeyDown);
     }, [triggerCapture]);
 
+
     const handleUp = () => {
+        playSound('beep');
         if (mode === 'camera') setIsMirrored(!isMirrored);
         if (mode === 'menu') setMenuIndex(prev => Math.max(0, prev - 1));
         if (mode === 'gallery_grid' || mode.startsWith('select_')) setGalleryIndex(prev => Math.max(0, prev - 3));
     };
 
     const handleDown = () => {
+        playSound('beep');
         if (mode === 'menu') setMenuIndex(prev => Math.min(3, prev + 1));
         if (mode === 'gallery_grid' || mode.startsWith('select_')) setGalleryIndex(prev => Math.min(photos.length - 1, prev + 3));
     };
 
     const handleLeft = () => {
+        playSound('beep');
         if (['gallery_single', 'gallery_grid', 'select_photobooth', 'select_zip'].includes(mode)) {
             setGalleryIndex(prev => Math.max(0, prev - 1));
         }
     };
 
     const handleRight = () => {
+        playSound('beep');
         if (['gallery_single', 'gallery_grid', 'select_photobooth', 'select_zip'].includes(mode)) {
             setGalleryIndex(prev => Math.min(photos.length - 1, prev + 1));
         }
@@ -77,26 +118,29 @@ const Camera: React.FC<CameraProps> = ({ photos, setPhotos }) => {
     const exportPhotobooth = async (indices: number[]) => {
         const canvas = document.createElement('canvas');
         canvas.width = 600;
-        canvas.height = 1800;
+        canvas.height = 2000;
         const ctx = canvas.getContext('2d');
         if (!ctx) return;
 
         ctx.fillStyle = '#ffffff';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-        const loadImg = (src: string) => new Promise<HTMLImageElement>((resolve) => {
+        const loadImg = (src: string) => new Promise<HTMLImageElement>((resolve, reject) => {
             const img = new Image();
             img.onload = () => resolve(img);
+            img.onerror = () => reject(new Error("Image failed to load"));
             img.src = src;
         });
 
+        // --- NEW BORDER MATH ---
+        const padding = 50;
+        const targetW = 500; // Shrunk down to leave 50px on the left and right
+        const targetH = 375; // Shrunk down to maintain the perfect 4:3 ratio
+
         for (let i = 0; i < 4; i++) {
             const photo = photos[indices[i]];
-
             const img = await loadImg(photo.displayUrl);
 
-            const targetW = 560;
-            const targetH = 420;
             const imgRatio = img.width / img.height;
             const targetRatio = targetW / targetH;
             let sourceX = 0, sourceY = 0, sourceW = img.width, sourceH = img.height;
@@ -109,12 +153,13 @@ const Camera: React.FC<CameraProps> = ({ photos, setPhotos }) => {
                 sourceY = (img.height - sourceH) / 2;
             }
 
-            const drawY = 20 + (i * 440);
+            // 50px top padding + (Current photo index * (Photo Height + 50px gap))
+            const drawY = padding + (i * (targetH + padding));
 
-            ctx.drawImage(img, sourceX, sourceY, sourceW, sourceH, 20, drawY, targetW, targetH);
+            ctx.drawImage(img, sourceX, sourceY, sourceW, sourceH, padding, drawY, targetW, targetH);
 
             ctx.fillStyle = '#ff8c00';
-            ctx.font = 'bold 22px "Courier New", monospace';
+            ctx.font = 'bold 20px "Courier New", monospace'; // Scaled font down slightly to match smaller photo
             ctx.textAlign = 'right';
             ctx.textBaseline = 'bottom';
             ctx.shadowColor = 'rgba(0, 0, 0, 0.8)';
@@ -122,7 +167,32 @@ const Camera: React.FC<CameraProps> = ({ photos, setPhotos }) => {
             ctx.shadowOffsetX = 2;
             ctx.shadowOffsetY = 2;
 
-            ctx.fillText(`${photo.dateStr} ${photo.timeStr}`, 20 + targetW - 15, drawY + targetH - 15);
+            ctx.fillText(`${photo.dateStr} ${photo.timeStr}`, padding + targetW - 12, drawY + targetH - 12);
+        }
+
+        try {
+            const logoImg = await loadImg('/logo.png');
+
+            const maxLogoW = 350;
+            const maxLogoH = 150;
+            let logoW = logoImg.width;
+            let logoH = logoImg.height;
+
+            const logoRatio = logoW / logoH;
+            if (logoW > maxLogoW) { logoW = maxLogoW; logoH = logoW / logoRatio; }
+            if (logoH > maxLogoH) { logoH = maxLogoH; logoW = logoH * logoRatio; }
+
+            const logoX = (canvas.width - logoW) / 2;
+
+            // The 4th photo now ends at Y: 1700. This centers the logo perfectly in the remaining 300px of space!
+            const logoY = 1700 + ((300 - logoH) / 2);
+
+            ctx.shadowColor = 'transparent';
+            ctx.shadowBlur = 0;
+
+            ctx.drawImage(logoImg, logoX, logoY, logoW, logoH);
+        } catch (err) {
+            console.warn("Could not load logo for the photobooth strip, skipping logo drawing.", err);
         }
 
         const link = document.createElement('a');
@@ -155,6 +225,7 @@ const Camera: React.FC<CameraProps> = ({ photos, setPhotos }) => {
     };
 
     const handleCenterOK = () => {
+        playSound('beep');
         if (mode === 'gallery_grid') {
             setMode('gallery_single');
         } else if (mode === 'select_photobooth') {
@@ -188,6 +259,7 @@ const Camera: React.FC<CameraProps> = ({ photos, setPhotos }) => {
     };
 
     const handleMenuButton = () => {
+        playSound('beep');
         if (mode === 'select_zip' && selectedPhotos.length > 0) exportZip();
         else if (mode.startsWith('select_')) setMode('menu');
         else setMode(mode === 'menu' ? 'camera' : 'menu');
@@ -202,7 +274,16 @@ const Camera: React.FC<CameraProps> = ({ photos, setPhotos }) => {
                 style={{ top: '26%', left: '14%', width: '51%', height: '52%' }}>
 
                 {mode === 'camera' && (
-                    <Screen ref={screenRef} filter={FILTERS[filterIdx]} isMirrored={!isMirrored} onCapture={(photoData) => setPhotos(prev => [photoData, ...prev])} />
+                    <>
+                        <Screen ref={screenRef} filter={FILTERS[filterIdx]} isMirrored={!isMirrored} onCapture={(photoData) => setPhotos(prev => [photoData, ...prev])} />
+                        {countdown !== null && (
+                            <div className="absolute inset-0 flex items-center justify-center z-50 bg-black/20">
+                                <span className="text-digital-orange text-8xl font-black drop-shadow-[0_0_15px_rgba(255,140,0,1)] animate-ping">
+                                    {countdown}
+                                </span>
+                            </div>
+                        )}
+                    </>
                 )}
 
                 {mode === 'gallery_single' && (
