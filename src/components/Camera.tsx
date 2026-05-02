@@ -16,7 +16,6 @@ interface CameraProps {
 
 const FILTERS = ['', 'sepia(0.8)', 'grayscale(1)', 'saturate(2) contrast(1.2)', 'blur(0.5px) contrast(1.1)'];
 
-// --- SOUND MANAGER ---
 const sounds = {
     beep: typeof Audio !== "undefined" ? new Audio('/beep.mp3') : null,
     tick: typeof Audio !== "undefined" ? new Audio('/tick.mp3') : null,
@@ -30,7 +29,6 @@ const playSound = (type: keyof typeof sounds) => {
         audio.play().catch(() => { });
     }
 };
-// ---------------------
 
 const Camera: React.FC<CameraProps> = ({ photos, setPhotos }) => {
     const screenRef = useRef<ScreenHandle>(null);
@@ -132,10 +130,9 @@ const Camera: React.FC<CameraProps> = ({ photos, setPhotos }) => {
             img.src = src;
         });
 
-        // --- NEW BORDER MATH ---
         const padding = 50;
-        const targetW = 500; // Shrunk down to leave 50px on the left and right
-        const targetH = 375; // Shrunk down to maintain the perfect 4:3 ratio
+        const targetW = 500;
+        const targetH = 375;
 
         for (let i = 0; i < 4; i++) {
             const photo = photos[indices[i]];
@@ -153,13 +150,12 @@ const Camera: React.FC<CameraProps> = ({ photos, setPhotos }) => {
                 sourceY = (img.height - sourceH) / 2;
             }
 
-            // 50px top padding + (Current photo index * (Photo Height + 50px gap))
             const drawY = padding + (i * (targetH + padding));
 
             ctx.drawImage(img, sourceX, sourceY, sourceW, sourceH, padding, drawY, targetW, targetH);
 
             ctx.fillStyle = '#ff8c00';
-            ctx.font = 'bold 20px "Courier New", monospace'; // Scaled font down slightly to match smaller photo
+            ctx.font = 'bold 20px "Courier New", monospace';
             ctx.textAlign = 'right';
             ctx.textBaseline = 'bottom';
             ctx.shadowColor = 'rgba(0, 0, 0, 0.8)';
@@ -184,7 +180,6 @@ const Camera: React.FC<CameraProps> = ({ photos, setPhotos }) => {
 
             const logoX = (canvas.width - logoW) / 2;
 
-            // The 4th photo now ends at Y: 1700. This centers the logo perfectly in the remaining 300px of space!
             const logoY = 1700 + ((300 - logoH) / 2);
 
             ctx.shadowColor = 'transparent';
